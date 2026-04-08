@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Nodes;
+﻿#pragma warning disable MCPEXP001
+
+using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using Po.Community.Core;
 
@@ -11,14 +13,18 @@ public static class ServiceCollectionExtensions
         services
             .AddMcpServer(options =>
             {
-                options.Capabilities ??= new ServerCapabilities();
-                options.Capabilities.Experimental ??= new Dictionary<string, object>();
-                options.Capabilities.Experimental.Add(
-                    "fhir_context_required",
-                    new JsonObject { ["value"] = true }
-                );
+                options.Capabilities = new ServerCapabilities
+                {
+                    Extensions = new Dictionary<string, object>
+                    {
+                        ["ai.promptopinion/fhir-context"] = new JsonObject()
+                    }
+                };
             })
-            .WithHttpTransport()
+            .WithHttpTransport(options =>
+            {
+                options.Stateless = true;
+            })
             .WithListToolsHandler(McpClientListToolsService.Handler)
             .WithCallToolHandler(McpClientCallToolService.Handler);
 
@@ -44,3 +50,5 @@ public static class ServiceCollectionExtensions
         return services;
     }
 }
+
+#pragma warning restore MCPEXP001
